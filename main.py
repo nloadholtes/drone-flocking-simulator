@@ -16,7 +16,8 @@ class Drone:
         self.make_decision = decision_function
         self.destination = None
         self.radius = 0.5  # Drone's physical size
-        self.safe_distance = 2 * self.radius  # Minimum safe distance between drones
+        # This could/should be a sphere: let the drones pick an altitude to avoid each other
+        self.safe_distance = 1.25 * self.radius  # Minimum safe distance between drones
         self.dead = False  # New attribute to track if the drone is 'dead'
 
 
@@ -159,7 +160,7 @@ class Simulation:
 
 
 # Example usage remains the same
-sources = [(0, 0), (0, 10), (10, 0)]
+sources = [(0, 0), (0, 10), ]
 destinations = [(5, 5), (15, 15), (0, 15), (15, 0)]
 
 sim = Simulation(10, sources, destinations)

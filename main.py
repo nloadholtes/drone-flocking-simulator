@@ -1,7 +1,11 @@
+import matplotlib
+
+matplotlib.use("Qt5Agg")
+
 import random
 import math
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation, PillowWriter
+from matplotlib.animation import FuncAnimation
 
 
 class Drone:
@@ -91,14 +95,10 @@ class Simulation:
 
             return self.display()
 
-        animation = FuncAnimation(
+        self.animation = FuncAnimation(
             self.fig, update, frames=steps, interval=50, blit=True
         )
-
-        # Save the animation as a gif
-        writer = PillowWriter(fps=25)
-        animation.save("drone_simulation.gif", writer=writer)
-        print("Animation saved as 'drone_simulation.gif'")
+        plt.show()
 
     def display(self):
         if self.scatter:
@@ -128,7 +128,7 @@ class Simulation:
         self.ax.set_xlim(-5, 20)
         self.ax.set_ylim(-5, 20)
         self.ax.legend()
-        self.ax.set_title("Drone Simulation")
+        self.ax.set_title(f"Drone Simulation (Step: {self.current_step})")
 
         return [self.scatter]
 

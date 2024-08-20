@@ -17,6 +17,7 @@ class Drone:
         self.destination = None
         self.radius = 0.5  # Drone's physical size
         self.safe_distance = 2 * self.radius  # Minimum safe distance between drones
+        self.dead = False  # New attribute to track if the drone is 'dead'
 
 
 class Simulation:
@@ -31,6 +32,7 @@ class Simulation:
         self.fig, self.ax = plt.subplots(figsize=(10, 10))
         self.scatter = None
         self.current_step = 0
+        self.active_drones = self.drones.copy()  # Keep track of active drones
 
     def default_decision(self, drone, neighbors):
         if drone.destination is None:
@@ -84,15 +86,31 @@ class Simulation:
 
         return avoid_dx, avoid_dy
 
+    def check_collisions(self):
+        for i, drone in enumerate(self.active_drones):
+            if drone.dead:
+                continue
+            for other in self.active_drones[i + 1 :]:
+                if other.dead:
+                    continue
+                distance = math.sqrt(
+                    (drone.x - other.x) ** 2 + (drone.y - other.y) ** 2
+                )
+                if distance < drone.radius + other.radius:
+                    drone.dead = True
+                    other.dead = True
+        self.active_drones = [drone for drone in self.active_drones if not drone.dead]
+
     def run(self, steps):
         def update(frame):
             self.current_step = frame
-            for drone in self.drones:
-                neighbors = [d for d in self.drones if d != drone]
+            for drone in self.active_drones:
+                neighbors = [d for d in self.active_drones if d != drone]
                 dx, dy = drone.make_decision(drone, neighbors)
                 drone.x += dx
                 drone.y += dy
 
+            self.check_collisions()
             return self.display()
 
         self.animation = FuncAnimation(
@@ -104,10 +122,15 @@ class Simulation:
         if self.scatter:
             self.scatter.remove()
 
-        x = [drone.x for drone in self.drones]
-        y = [drone.y for drone in self.drones]
+        x = [drone.x for drone in self.drones if not drone.dead]
+        y = [drone.y for drone in self.drones if not drone.dead]
 
         self.scatter = self.ax.scatter(x, y, c="blue", s=50)
+
+        # Plot dead drones
+        dead_x = [drone.x for drone in self.drones if drone.dead]
+        dead_y = [drone.y for drone in self.drones if drone.dead]
+        self.ax.scatter(dead_x, dead_y, c="red", s=50, marker="x")
 
         # Plot sources and destinations
         sources_x, sources_y = zip(*self.sources)
@@ -128,7 +151,9 @@ class Simulation:
         self.ax.set_xlim(-5, 20)
         self.ax.set_ylim(-5, 20)
         self.ax.legend()
-        self.ax.set_title(f"Drone Simulation (Step: {self.current_step})")
+        self.ax.set_title(
+            f"Drone Simulation (Step: {self.current_step}, Active: {len(self.active_drones)})"
+        )
 
         return [self.scatter]
 
